@@ -172,7 +172,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             for j in range(0,16,1):
                 temp = self.findChild(QtWidgets.QLabel,'temp' + str(i * 16 + j))
                 temp.setText(text[114 * i + 7 * j:114 * i + 7 * j + 2] + 'deg')
-        self.MainWindow.temp_hilo.setText('temp hi: ' + text[total_ic* 114:total_ic* 114 + 4] + 'deg')
+        self.MainWindow.temp_hilo.setText('temp hi:   ' + text[total_ic* 114:total_ic* 114 + 4] + 'deg\n' + 'temp avg: ' + text[total_ic* 114 + 5:total_ic* 114 + 9] + 'deg\n')
                 
 class Setting_window(QtWidgets.QMainWindow):
     def __init__(self):
