@@ -39,29 +39,12 @@ class Ui_MainWindow(object):
         self.Voltage_hilo = QtWidgets.QLabel(self.centralwidget)
         self.Voltage_hilo.setGeometry(QtCore.QRect(1400, 350, 275, 50))
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(14)
         self.Voltage_hilo.setFont(font)
-        self.Voltage_hilo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.Voltage_hilo.setObjectName("Voltage_hilo")
+        self.Voltage_hilo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+        self.Voltage_hilo.setObjectName("AMS_Status")
         radius = 5
         self.Voltage_hilo.setStyleSheet(
-            """
-            background:rgb(200, 200, 200);
-            border-top-left-radius:{0}px;
-            border-bottom-left-radius:{0}px;
-            border-top-right-radius:{0}px;
-            border-bottom-right-radius:{0}px;
-            """.format(radius)
-        )
-        self.temp_hilo = QtWidgets.QLabel(self.centralwidget)
-        self.temp_hilo.setGeometry(QtCore.QRect(1400, 410, 275, 100))
-        font = QtGui.QFont()
-        font.setPointSize(18)
-        self.temp_hilo.setFont(font)
-        self.temp_hilo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.temp_hilo.setObjectName("temp_hilo")
-        radius = 5
-        self.temp_hilo.setStyleSheet(
             """
             background:rgb(200, 200, 200);
             border-top-left-radius:{0}px;
@@ -81,7 +64,7 @@ class Ui_MainWindow(object):
         self.Setting.setObjectName("Setting")
         for i in range(0,6,1):
             for j in range(0,24,1):
-                self.temp = QtWidgets.QProgressBar(self.centralwidget, textVisible=False)
+                self.temp = QtWidgets.QProgressBar(self.centralwidget)
                 self.bias = 0
                 if (j > 11):
                     self.bias = 50
