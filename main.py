@@ -131,7 +131,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         min = 0    
         for i in range(0,total_ic,1):
             for j in range(0,12,1):
-                cell_v[i * 12 + j] = (float(text[86 * i + 7 * j:86 * i + 7 * j + 7]))
+                cell_v[i * 12 + j] = (float(text[86 * i + 7 * j:86 * i + 7 * j + 7].replace(' ','0')))
                 if(cell_v[i * 12 + j] > cell_v[max]):
                     max = i * 12 + j
                 if(cell_v[i * 12 + j] < cell_v[min]):
