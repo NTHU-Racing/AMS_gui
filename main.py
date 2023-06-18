@@ -129,14 +129,17 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def update_voltage(self,text):
         max = 0
         min = 0    
+        text = text.replace('\r','')
+        text = text.replace('\n','')
+        l = text.split(' ')
         for i in range(0,total_ic,1):
             for j in range(0,12,1):
-                cell_v[i * 12 + j] = (float(text[86 * i + 7 * j:86 * i + 7 * j + 7].replace(' ','0')))
-                if(cell_v[i * 12 + j] > cell_v[max]):
+                cell_v[i * 12 + j] = (float(l[i * 12 + j]))
+                if(cell_v[i * 12 + j] > cell_v[max] and cell_v[i * 12 + j] < 4.3):
                     max = i * 12 + j
                 if(cell_v[i * 12 + j] < cell_v[min]):
                     min = i * 12 + j
-        print(cell_v)
+        print(l)
         for i in range(0,total_ic,1):
             for j in range(0,12,1):
                 temp = self.findChild(QtWidgets.QProgressBar,'progressBar' + str(i * 12 + j))
@@ -154,7 +157,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                 tem_s = str(cell_v[i * 12 + j])
                 temp = self.findChild(QtWidgets.QLabel,'v' + str(i * 12 + j))
                 temp.setText(tem_s[0:4] + 'v')
-        self.MainWindow.Voltage_hilo.setText('voltage hi: ' + text[total_ic* 86:total_ic* 86 + 4] + 'v lo:' + text[total_ic* 86 + 7:total_ic* 86 + 11])
+        self.MainWindow.Voltage_hilo.setText('voltage hi: ' + str(round(float(l[len(l) - 3]),2)) + 'v lo:' + str(round(float(l[len(l) - 2]),2)) +' v')
     def update_dis(self,text):
         for i in range(0,total_ic,1):
             for j in range(0,12,1):
@@ -168,11 +171,15 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                     temp.setStyleSheet("background-color: rgb(200, 200, 200);")
                     
     def update_temp(self,text):
+        text = text.replace('\r','')
+        text = text.replace('\n','')
+        l = text.split(' ')
+        #print(l)
         for i in range(0,total_ic,1):
             for j in range(0,16,1):
                 temp = self.findChild(QtWidgets.QLabel,'temp' + str(i * 16 + j))
-                temp.setText(text[114 * i + 7 * j:114 * i + 7 * j + 2] + 'deg')
-        self.MainWindow.temp_hilo.setText('temp hi:   ' + text[total_ic* 114:total_ic* 114 + 4] + 'deg\n' + 'temp avg: ' + text[total_ic* 114 + 5:total_ic* 114 + 9] + 'deg\n')
+                temp.setText(str(round(float(l[16 * i + j]),1))+ 'deg')
+        self.MainWindow.temp_hilo.setText('temp hi:   ' + str(l[len(l) - 2]) + 'deg\n' + 'temp avg: ' + str(l[len(l) - 1]) + 'deg\n')
                 
 class Setting_window(QtWidgets.QMainWindow):
     def __init__(self):
