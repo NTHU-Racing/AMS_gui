@@ -40,7 +40,7 @@ class ThreadTask(QThread):
         is_send = True
         line = 0
         try:
-            ser = serial.Serial(COM_port, BAUD_RATES)
+            ser = serial.Serial(COM_port, BAUD_RATES,timeout=3,inter_byte_timeout=1)
             if(read_setting):
                 ser.write(b'd\n')
             else:
@@ -54,21 +54,16 @@ class ThreadTask(QThread):
                     s = s + data_raw.decode()
                     if(line <= 2):
                         AMS_status = AMS_status + data_raw.decode()
-                        print('total')
                         sec = 1
                     elif(line <= 2 +(total_ic + 2)):
-                        print('Voltage')
                         sec = 2
                         v_str = v_str + data_raw.decode()
                     elif(line <= 2 + 2 * (total_ic + 2) - 1):
                         temp_str = temp_str + data_raw.decode()
-                        print('Temp')
                         sec = 3
                     else:
-                        print('Dis')
                         dis_str = dis_str + data_raw.decode()
                         sec = 4
-                    print(str(line) + ' '+ data_raw.decode())
                     line = line + 1
                     if(data_raw == b'\r\r\r\r\r\r\r\r\r\r\n'):
                         
@@ -80,7 +75,6 @@ class ThreadTask(QThread):
                         else:
                             read_setting = True
                             total_ic = int(s[0:2])
-                            print(total_ic)
                         s = ''
                         v_str = ''
                         temp_str = ''
@@ -90,7 +84,9 @@ class ThreadTask(QThread):
                         is_send = False
             ser.close()     
         except Exception  as e:
+            print(e)
             AMS_status = 'Can_not_connect_to_' + COM_port
+            read_setting = False
             self.return_AMS_status.emit(AMS_status)
 
 
@@ -112,6 +108,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.timer=QTimer()
         self.timer.timeout.connect(self.start_read_thread)
     def Start_read(self):
+        auto_identify_COM()
         self.timer.start(1000)
     def Stop_read(self):
         self.timer.stop()
@@ -127,59 +124,70 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         temp = temp.replace('_',' ')
         self.MainWindow.AMS_Status.setText(temp)
     def update_voltage(self,text):
-        max = 0
-        min = 0    
-        text = text.replace('\r','')
-        text = text.replace('\n','')
-        l = text.split(' ')
-        for i in range(0,total_ic,1):
-            for j in range(0,12,1):
-                cell_v[i * 12 + j] = (float(l[i * 12 + j]))
-                if(cell_v[i * 12 + j] > cell_v[max] and cell_v[i * 12 + j] < 4.3):
-                    max = i * 12 + j
-                if(cell_v[i * 12 + j] < cell_v[min]):
-                    min = i * 12 + j
-        print(l)
-        for i in range(0,total_ic,1):
-            for j in range(0,12,1):
-                temp = self.findChild(QtWidgets.QProgressBar,'progressBar' + str(i * 12 + j))
-                if(i * 12 + j == max):
-                    temp.setStyleSheet("QProgressBar::chunk{background: rgb(255, 0, 0);}")
-                elif(i * 12 + j == min):
-                    temp.setStyleSheet("QProgressBar::chunk{background: rgb(0, 0, 255);}")
-                else:
-                    temp.setStyleSheet("QProgressBar::chunk{background: rgb(0, 255, 0);}")
-                if(cell_v[i * 12 + j] < 4.20 and cell_v[i * 12 + j] > 2.50):
-                    temp.setValue(int((cell_v[i * 12 + j] - 2.5)/1.7  * 100))
-                else:
-                    temp.setValue(0)
-                tem_s = ''
-                tem_s = str(cell_v[i * 12 + j])
-                temp = self.findChild(QtWidgets.QLabel,'v' + str(i * 12 + j))
-                temp.setText(tem_s[0:4] + 'v')
-        self.MainWindow.Voltage_hilo.setText('voltage hi: ' + str(round(float(l[len(l) - 3]),2)) + 'v lo:' + str(round(float(l[len(l) - 2]),2)) +' v')
-    def update_dis(self,text):
-        for i in range(0,total_ic,1):
-            for j in range(0,12,1):
-                temp = self.findChild(QtWidgets.QLabel,'dis' + str(i * 12 + j))
-                if(text[i * 14 + j] == '#'):
-                    if(text[total_ic * i] == 1):
-                        temp.setStyleSheet("background-color: rgb(0, 200, 0);")
+        try:
+            max = 0
+            min = 0    
+            text = text.replace('\r','')
+            text = text.replace('\n','')
+            l = text.split(' ')
+            for i in range(0,total_ic,1):
+                for j in range(0,12,1):
+                    cell_v[i * 12 + j] = (float(l[i * 12 + j]))
+                    if(cell_v[i * 12 + j] > cell_v[max] and cell_v[i * 12 + j] < 4.3):
+                        max = i * 12 + j
+                    if(cell_v[i * 12 + j] < cell_v[min]):
+                        min = i * 12 + j
+            for i in range(0,total_ic,1):
+                for j in range(0,12,1):
+                    temp = self.findChild(QtWidgets.QProgressBar,'progressBar' + str(i * 12 + j))
+                    if(i * 12 + j == max):
+                        temp.setStyleSheet("QProgressBar::chunk{background: rgb(255, 0, 0);}")
+                    elif(i * 12 + j == min):
+                        temp.setStyleSheet("QProgressBar::chunk{background: rgb(0, 0, 255);}")
                     else:
-                        temp.setStyleSheet("background-color: rgb(0, 200, 255);")
-                else:
-                    temp.setStyleSheet("background-color: rgb(200, 200, 200);")
+                        temp.setStyleSheet("QProgressBar::chunk{background: rgb(0, 255, 0);}")
+                    if(cell_v[i * 12 + j] < 4.20 and cell_v[i * 12 + j] > 2.50):
+                        temp.setValue(int((cell_v[i * 12 + j] - 2.5)/1.7  * 100))
+                    else:
+                        temp.setValue(0)
+                    tem_s = ''
+                    tem_s = str(cell_v[i * 12 + j])
+                    temp = self.findChild(QtWidgets.QLabel,'v' + str(i * 12 + j))
+                    temp.setText(tem_s[0:4] + 'v')
+            self.MainWindow.Voltage_hilo.setText('voltage hi: ' + str(round(float(l[len(l) - 3]),2)) + 'v lo:' + str(round(float(l[len(l) - 2]),2)) +' v')
+        except Exception as e:
+            print(e)
+            pass
+    def update_dis(self,text):
+        try:
+            for i in range(0,total_ic,1):
+                for j in range(0,12,1):
+                    temp = self.findChild(QtWidgets.QLabel,'dis' + str(i * 12 + j))
+                    if(text[i * 14 + j] == '#'):
+                        if(text[total_ic * i] == 1):
+                            temp.setStyleSheet("background-color: rgb(0, 200, 0);")
+                        else:
+                            temp.setStyleSheet("background-color: rgb(0, 200, 255);")
+                    else:
+                        temp.setStyleSheet("background-color: rgb(200, 200, 200);")
+        except Exception as e:
+            print(e)
+            pass
                     
     def update_temp(self,text):
-        text = text.replace('\r','')
-        text = text.replace('\n','')
-        l = text.split(' ')
-        #print(l)
-        for i in range(0,total_ic,1):
-            for j in range(0,16,1):
-                temp = self.findChild(QtWidgets.QLabel,'temp' + str(i * 16 + j))
-                temp.setText(str(round(float(l[16 * i + j]),1))+ 'deg')
-        self.MainWindow.temp_hilo.setText('temp hi:   ' + str(l[len(l) - 2]) + 'deg\n' + 'temp avg: ' + str(l[len(l) - 1]) + 'deg\n')
+        try:
+            text = text.replace('\r','')
+            text = text.replace('\n','')
+            l = text.split(' ')
+            #print(l)
+            for i in range(0,total_ic,1):
+                for j in range(0,16,1):
+                    temp = self.findChild(QtWidgets.QLabel,'temp' + str(i * 16 + j))
+                    temp.setText(str(round(float(l[16 * i + j]),1))+ 'deg')
+            self.MainWindow.temp_hilo.setText('temp hi:   ' + str(l[len(l) - 2]) + 'deg\n' + 'temp avg: ' + str(l[len(l) - 1]) + 'deg\n')
+        except Exception as e:
+            print(e)
+            pass
                 
 class Setting_window(QtWidgets.QMainWindow):
     def __init__(self):
@@ -195,10 +203,23 @@ class Setting_window(QtWidgets.QMainWindow):
         COM_port = str(self.ui.COM.currentText())
         print(COM_port)
 
-                
+
+def auto_identify_COM():
+    for i in range(32):
+        try:
+            ser = serial.Serial('COM' + str(i), BAUD_RATES)
+            global COM_port
+            COM_port = 'COM' + str(i)
+            ser.close()
+        except Exception as e:
+            print(e)
+            print('Not COM'+ str(i))
+            pass
+
 
 if __name__ == '__main__':
     import sys
+    
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow_controller()
     window.show()
