@@ -1,6 +1,7 @@
 import serial
 import os
 import numpy as np
+import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread, pyqtSignal,QTimer
@@ -16,6 +17,9 @@ cell_temp = np.zeros(total_ic * 16)
 read_setting = False
 
 
+class CommunicationException(Exception):
+    def __init__(self, message: str):
+        super().__init__(message) 
 
 
 class ThreadTask(QThread):
@@ -40,14 +44,17 @@ class ThreadTask(QThread):
         is_send = True
         line = 0
         try:
-            ser = serial.Serial(COM_port, BAUD_RATES,timeout=3,inter_byte_timeout=1)
+            ser = serial.Serial(COM_port, BAUD_RATES,timeout=3,inter_byte_timeout=1,write_timeout = 1)
             if(read_setting):
                 ser.write(b'd\n')
             else:
                 ser.write(b's\n')
                 
             is_send = True
+            start_time = time.time()
             while is_send :
+                if(time.time() - start_time > 5):
+                    raise CommunicationException('communication error')
                 while ser.in_waiting: 
                     is_read = True
                     data_raw = ser.readline()
@@ -65,8 +72,10 @@ class ThreadTask(QThread):
                         dis_str = dis_str + data_raw.decode()
                         sec = 4
                     line = line + 1
+                    
+                    if(line > 1000):
+                        raise CommunicationException('communication error')
                     if(data_raw == b'\r\r\r\r\r\r\r\r\r\r\n'):
-                        
                         if(read_setting):
                             self.return_AMS_status.emit(AMS_status)
                             self.return_v.emit(v_str)
@@ -85,6 +94,17 @@ class ThreadTask(QThread):
             ser.close()     
         except Exception  as e:
             print(e)
+            s = ''
+            v_str = ''
+            temp_str = ''
+            AMS_status = ''
+            dis_str = ''
+            line = 0
+            is_send = False
+            try:
+                ser.close()
+            except:
+                pass    
             AMS_status = 'Can_not_connect_to_' + COM_port
             read_setting = False
             self.return_AMS_status.emit(AMS_status)
