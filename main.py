@@ -203,8 +203,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             for i in range(0,total_ic,1):
                 for j in range(0,16,1):
                     temp = self.findChild(QtWidgets.QLabel,'temp' + str(i * 16 + j))
-                    temp.setText(str(round(float(l[16 * i + j]),1))+ 'deg')
-            self.MainWindow.temp_hilo.setText('temp hi:   ' + str(l[len(l) - 2]) + 'deg\n' + 'temp avg: ' + str(l[len(l) - 1]) + 'deg\n')
+                    temp.setText(str(round(float(l[16 * i + j]),1))+ '°C')
+            self.MainWindow.temp_hilo.setText('temp hi:   ' + str(l[len(l) - 2]) + ' deg\n' + 'temp avg: ' + str(l[len(l) - 1]) + 'deg\n')
         except Exception as e:
             print(e)
             pass
